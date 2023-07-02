@@ -12,9 +12,11 @@ namespace API_PROYECT.Controllers
     public class VillaController : ControllerBase
     {
         private readonly ILogger<VillaController> _logger;
-        public VillaController(ILogger<VillaController> logger)
+        private readonly ApplicationDbContext _db;
+        public VillaController(ILogger<VillaController> logger, ApplicationDbContext db)
         {
             _logger = logger;
+            _db = db;
         }
 
         //endpoint retorna todas las villas
@@ -24,7 +26,7 @@ namespace API_PROYECT.Controllers
         public ActionResult<IEnumerable<VillaDto>> GetVillas()
         {
             _logger.LogInformation("Obtener las villas");
-            return Ok(VillaStore.villaList);
+            return Ok(_db.Villas.ToList()); // Como select * from villas;
         }
 
         //Endpoint que retorne una sola villa
@@ -40,7 +42,8 @@ namespace API_PROYECT.Controllers
                 return BadRequest();
             }
 
-            var villa = VillaStore.villaList.FirstOrDefault(v => v.Id == id);
+            //var villa = VillaStore.villaList.FirstOrDefault(v => v.Id == id);
+            var villa = _db.Villas.FirstOrDefault(v => v.Id == id); //Traer un registro en base al id de la tabla Villas
 
             if (villa == null)
             {
@@ -62,7 +65,7 @@ namespace API_PROYECT.Controllers
             }
 
             //Validacion personalizada
-            if (VillaStore.villaList.FirstOrDefault(v => v.Nombre.ToLower() == villaDto.Nombre.ToLower()) != null)
+            if (_db.Villas.FirstOrDefault(v => v.Nombre.ToLower() == villaDto.Nombre.ToLower()) != null)
             {
                 ModelState.AddModelError("NombreExiste", "La villa con ese nombre ya existe!");
                 return BadRequest(ModelState);
@@ -76,9 +79,23 @@ namespace API_PROYECT.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
-            //Grabar el siguiente ID
-            villaDto.Id = VillaStore.villaList.OrderByDescending(v => v.Id).FirstOrDefault().Id + 1;
-            VillaStore.villaList.Add(villaDto);
+
+            //Crear nuevo modelo en base a la Villa
+            Villa modelo = new()
+            {
+                Id = villaDto.Id,
+                Nombre = villaDto.Nombre,
+                Detalle = villaDto.Detalle,
+                ImagenUrl = villaDto.ImagenUrl,
+                Ocupantes = villaDto.Ocupantes,
+                Tarifa = villaDto.Tarifa,
+                MetrosCuadrados = villaDto.MetrosCuadrados,
+                Amenidad = villaDto.Amenidad
+            };
+
+            //Agregar registro a la BD
+            _db.Villas.Add(modelo); //Insert
+            _db.SaveChanges(); //guardar
 
             return CreatedAtRoute("GetVilla", new { id = villaDto.Id }, villaDto); //Redirigir a una ruta
         }
@@ -94,12 +111,14 @@ namespace API_PROYECT.Controllers
             {
                 return BadRequest();
             }
-            var villa = VillaStore.villaList.FirstOrDefault(v => v.Id == id);
+            var villa = _db.Villas.FirstOrDefault(v => v.Id == id);
             if (villa == null)
             {
                 return NotFound();
             }
-            VillaStore.villaList.Remove(villa);
+
+            _db.Villas.Remove(villa); //DELETE from villas where Id == Id;
+            _db.SaveChanges(); //Guardar
 
             return NoContent();
         }
@@ -115,10 +134,25 @@ namespace API_PROYECT.Controllers
                 return BadRequest();
             }
             //Buscar el registro por el ID
-            var villa = VillaStore.villaList.FirstOrDefault(v => v.Id == id);
-            villa.Nombre = villaDto.Nombre;
-            villa.Ocupantes = villaDto.Ocupantes;
-            villa.MetrosCuadrados = villaDto.MetrosCuadrados;
+            //var villa = VillaStore.villaList.FirstOrDefault(v => v.Id == id);
+            //villa.Nombre = villaDto.Nombre;
+            //villa.Ocupantes = villaDto.Ocupantes;
+            //villa.MetrosCuadrados = villaDto.MetrosCuadrados;
+
+            Villa modelo = new()
+            {
+                Id = villaDto.Id,
+                Nombre = villaDto.Nombre,
+                Detalle = villaDto.Detalle,
+                ImagenUrl = villaDto.ImagenUrl,
+                Ocupantes = villaDto.Ocupantes,
+                Tarifa = villaDto.Tarifa,
+                MetrosCuadrados = villaDto.MetrosCuadrados,
+                Amenidad = villaDto.Amenidad
+            };
+
+            _db.Villas.Update(modelo); //Actualizar el modelo seleccionado
+            _db.SaveChanges(); //guardar
 
             return NoContent();
         }
@@ -133,15 +167,43 @@ namespace API_PROYECT.Controllers
             {
                 return BadRequest();
             }
-            //Buscar el registro por el ID
-            var villa = VillaStore.villaList.FirstOrDefault(v => v.Id == id);
+            //Sacar el registro que se va a modificar
+            var villa = _db.Villas.FirstOrDefault(v => v.Id == id);
 
-            pathDto.ApplyTo(villa, ModelState);
+            VillaDto villaDto = new()
+            {
+                Id = villa.Id,
+                Nombre = villa.Nombre,
+                Detalle = villa.Detalle,
+                ImagenUrl = villa.ImagenUrl,
+                Ocupantes = villa.Ocupantes,
+                Tarifa = villa.Tarifa,
+                MetrosCuadrados = villa.MetrosCuadrados,
+                Amenidad = villa.Amenidad
+            };
+
+            if (villa == null) return BadRequest();
+
+            pathDto.ApplyTo(villaDto, ModelState);
 
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+
+            Villa modelo = new()
+            {
+                Id = villaDto.Id,
+                Nombre = villaDto.Nombre,
+                Detalle = villaDto.Detalle,
+                ImagenUrl = villaDto.ImagenUrl,
+                Ocupantes = villaDto.Ocupantes,
+                Tarifa = villaDto.Tarifa,
+                MetrosCuadrados = villaDto.MetrosCuadrados,
+                Amenidad = villaDto.Amenidad
+            };
+            _db.Villas.Update(modelo);
+            _db.SaveChanges();
 
             return NoContent();
         }
