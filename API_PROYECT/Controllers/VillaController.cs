@@ -24,10 +24,10 @@ namespace API_PROYECT.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)] //Documentar diferentes codigos de estado
         //ActionResult -> para trabajar con codigos de estado
-        public ActionResult<IEnumerable<VillaDto>> GetVillas()
+        public async Task<ActionResult<IEnumerable<VillaDto>>> GetVillas()
         {
             _logger.LogInformation("Obtener las villas");
-            return Ok(_db.Villas.ToList()); // Como select * from villas;
+            return Ok(await _db.Villas.ToListAsync()); // Como select * from villas;
         }
 
         //Endpoint que retorne una sola villa
@@ -35,7 +35,7 @@ namespace API_PROYECT.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)] //Documentar diferentes codigos de estado
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<VillaDto> GetVilla(int id)
+        public async Task<ActionResult<VillaDto>> GetVilla(int id)
         {
             if (id == 0)
             {
@@ -44,7 +44,7 @@ namespace API_PROYECT.Controllers
             }
 
             //var villa = VillaStore.villaList.FirstOrDefault(v => v.Id == id);
-            var villa = _db.Villas.FirstOrDefault(v => v.Id == id); //Traer un registro en base al id de la tabla Villas
+            var villa = await _db.Villas.FirstOrDefaultAsync(v => v.Id == id); //Traer un registro en base al id de la tabla Villas
 
             if (villa == null)
             {
@@ -58,7 +58,7 @@ namespace API_PROYECT.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult<VillaDto> CrearVilla([FromBody] VillaCreateDto villaDto)
+        public async Task<ActionResult<VillaDto>> CrearVilla([FromBody] VillaCreateDto villaDto)
         {
             if (!ModelState.IsValid)
             {
@@ -66,7 +66,7 @@ namespace API_PROYECT.Controllers
             }
 
             //Validacion personalizada
-            if (_db.Villas.FirstOrDefault(v => v.Nombre.ToLower() == villaDto.Nombre.ToLower()) != null)
+            if ( await _db.Villas.FirstOrDefaultAsync(v => v.Nombre.ToLower() == villaDto.Nombre.ToLower()) != null)
             {
                 ModelState.AddModelError("NombreExiste", "La villa con ese nombre ya existe!");
                 return BadRequest(ModelState);
@@ -90,8 +90,8 @@ namespace API_PROYECT.Controllers
             };
 
             //Agregar registro a la BD
-            _db.Villas.Add(modelo); //Insert
-            _db.SaveChanges(); //guardar
+            await _db.Villas.AddAsync(modelo); //Insert
+            await _db.SaveChangesAsync(); //guardar
 
             return CreatedAtRoute("GetVilla", new { id = modelo.Id }, modelo); //Redirigir a una ruta
         }
@@ -101,20 +101,20 @@ namespace API_PROYECT.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult DeleteVilla(int id)
+        public async Task<IActionResult> DeleteVilla(int id)
         {
             if (id == 0)
             {
                 return BadRequest();
             }
-            var villa = _db.Villas.FirstOrDefault(v => v.Id == id);
+            var villa = await _db.Villas.FirstOrDefaultAsync(v => v.Id == id);
             if (villa == null)
             {
                 return NotFound();
             }
 
             _db.Villas.Remove(villa); //DELETE from villas where Id == Id;
-            _db.SaveChanges(); //Guardar
+            await _db.SaveChangesAsync(); //Guardar
 
             return NoContent();
         }
@@ -123,7 +123,7 @@ namespace API_PROYECT.Controllers
         [HttpPut("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult UpdateVilla(int id, [FromBody] VillaUpdateDto villaDto)
+        public async Task<IActionResult> UpdateVilla(int id, [FromBody] VillaUpdateDto villaDto)
         {
             if (villaDto == null || id != villaDto.Id)
             {
@@ -148,7 +148,7 @@ namespace API_PROYECT.Controllers
             };
 
             _db.Villas.Update(modelo); //Actualizar el modelo seleccionado
-            _db.SaveChanges(); //guardar
+            await _db.SaveChangesAsync(); //guardar
 
             return NoContent();
         }
@@ -157,7 +157,7 @@ namespace API_PROYECT.Controllers
         [HttpPatch("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult UpdatePartialVilla(int id, JsonPatchDocument<VillaUpdateDto> pathDto)
+        public async Task<IActionResult> UpdatePartialVilla(int id, JsonPatchDocument<VillaUpdateDto> pathDto)
         {
             if (pathDto == null || id == 0)
             {
@@ -166,7 +166,7 @@ namespace API_PROYECT.Controllers
             //Sacar el registro que se va a modificar
             //AsNoTracking -> consultar un registro de entityframework sin que se trackee
             //Utilizarlo cuando se trabaja con un registro que se instancia 2 veces
-            var villa = _db.Villas.AsNoTracking().FirstOrDefault(v => v.Id == id);
+            var villa = await _db.Villas.AsNoTracking().FirstOrDefaultAsync(v => v.Id == id);
 
             VillaUpdateDto villaDto = new()
             {
@@ -201,7 +201,7 @@ namespace API_PROYECT.Controllers
                 Amenidad = villaDto.Amenidad
             };
             _db.Villas.Update(modelo);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return NoContent();
         }
