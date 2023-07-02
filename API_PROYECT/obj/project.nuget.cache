@@ -1,12 +1,17 @@
 {
   "version": 2,
-  "dgSpecHash": "qD4v1xswKjO0Ss2JERScWubw2GjY1cESIhbhgykMNiP4pgwT6gsbKKNaOm+V5htLiJ8JfooB+uv9taWA1nZJAw==",
+  "dgSpecHash": "gQuyEzxvKMM6oXjW+iqEhDmhH7e7vFTI6i6Y22uTnLk85HCI/uCuUJ1D1g31f4MNfCj/T9fCF7OaclhjxG3QNA==",
   "success": true,
   "projectFilePath": "C:\\Users\\klenb\\source\\repos\\API_PROYECT\\API_PROYECT\\API_PROYECT.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\klenb\\.nuget\\packages\\microsoft.aspnetcore.jsonpatch\\7.0.0\\microsoft.aspnetcore.jsonpatch.7.0.0.nupkg.sha512",
+    "C:\\Users\\klenb\\.nuget\\packages\\microsoft.aspnetcore.mvc.newtonsoftjson\\7.0.0\\microsoft.aspnetcore.mvc.newtonsoftjson.7.0.0.nupkg.sha512",
     "C:\\Users\\klenb\\.nuget\\packages\\microsoft.aspnetcore.openapi\\7.0.7\\microsoft.aspnetcore.openapi.7.0.7.nupkg.sha512",
+    "C:\\Users\\klenb\\.nuget\\packages\\microsoft.csharp\\4.7.0\\microsoft.csharp.4.7.0.nupkg.sha512",
     "C:\\Users\\klenb\\.nuget\\packages\\microsoft.extensions.apidescription.server\\6.0.5\\microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
     "C:\\Users\\klenb\\.nuget\\packages\\microsoft.openapi\\1.4.3\\microsoft.openapi.1.4.3.nupkg.sha512",
+    "C:\\Users\\klenb\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512",
+    "C:\\Users\\klenb\\.nuget\\packages\\newtonsoft.json.bson\\1.0.2\\newtonsoft.json.bson.1.0.2.nupkg.sha512",
     "C:\\Users\\klenb\\.nuget\\packages\\swashbuckle.aspnetcore\\6.5.0\\swashbuckle.aspnetcore.6.5.0.nupkg.sha512",
     "C:\\Users\\klenb\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\6.5.0\\swashbuckle.aspnetcore.swagger.6.5.0.nupkg.sha512",
     "C:\\Users\\klenb\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\6.5.0\\swashbuckle.aspnetcore.swaggergen.6.5.0.nupkg.sha512",
