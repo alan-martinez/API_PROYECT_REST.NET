@@ -1,5 +1,7 @@
 using API_PROYECT;
 using API_PROYECT.Datos;
+using API_PROYECT.Repositorio;
+using API_PROYECT.Repositorio.IRepositorio;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +19,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
 });
 
 builder.Services.AddAutoMapper(typeof(MappingConfig)); // Hacer uso de automapper
+
+//Inferfaz de villa repositorio
+builder.Services.AddScoped<IVillaRepositorio, VillaRepositorio>();
 
 var app = builder.Build();
 

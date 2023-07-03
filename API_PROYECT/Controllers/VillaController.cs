@@ -1,6 +1,7 @@
 ﻿using API_PROYECT.Datos;
 using API_PROYECT.Modelos;
 using API_PROYECT.Modelos.Dto;
+using API_PROYECT.Repositorio.IRepositorio;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
@@ -14,12 +15,13 @@ namespace API_PROYECT.Controllers
     public class VillaController : ControllerBase
     {
         private readonly ILogger<VillaController> _logger;
-        private readonly ApplicationDbContext _db;
+        //private readonly ApplicationDbContext _db;
+        private readonly IVillaRepositorio _villaRepo;
         private readonly IMapper _mapper;
-        public VillaController(ILogger<VillaController> logger, ApplicationDbContext db, IMapper mapper)
+        public VillaController(ILogger<VillaController> logger, IVillaRepositorio villaRepo, IMapper mapper)
         {
             _logger = logger;
-            _db = db;
+            _villaRepo = villaRepo;
             _mapper = mapper;
         }
 
@@ -31,7 +33,7 @@ namespace API_PROYECT.Controllers
         {
             _logger.LogInformation("Obtener las villas");
             
-            IEnumerable<Villa> villaList = await _db.Villas.ToListAsync();
+            IEnumerable<Villa> villaList = await _villaRepo.ObtenerTodos();
 
             return Ok(_mapper.Map<IEnumerable<VillaDto>>(villaList));
         }
@@ -50,7 +52,7 @@ namespace API_PROYECT.Controllers
             }
 
             //var villa = VillaStore.villaList.FirstOrDefault(v => v.Id == id);
-            var villa = await _db.Villas.FirstOrDefaultAsync(v => v.Id == id); //Traer un registro en base al id de la tabla Villas
+            var villa = await _villaRepo.Obtener(v => v.Id == id); //Traer un registro en base al id de la tabla Villas
 
             if (villa == null)
             {
@@ -72,7 +74,7 @@ namespace API_PROYECT.Controllers
             }
 
             //Validacion personalizada
-            if ( await _db.Villas.FirstOrDefaultAsync(v => v.Nombre.ToLower() == createDto.Nombre.ToLower()) != null)
+            if ( await _villaRepo.Obtener(v => v.Nombre.ToLower() == createDto.Nombre.ToLower()) != null)
             {
                 ModelState.AddModelError("NombreExiste", "La villa con ese nombre ya existe!");
                 return BadRequest(ModelState);
@@ -87,8 +89,7 @@ namespace API_PROYECT.Controllers
 
 
             //Agregar registro a la BD
-            await _db.Villas.AddAsync(modelo); //Insert
-            await _db.SaveChangesAsync(); //guardar
+            await _villaRepo.Crear(modelo); //Insert
 
             return CreatedAtRoute("GetVilla", new { id = modelo.Id }, modelo); //Redirigir a una ruta
         }
@@ -104,14 +105,13 @@ namespace API_PROYECT.Controllers
             {
                 return BadRequest();
             }
-            var villa = await _db.Villas.FirstOrDefaultAsync(v => v.Id == id);
+            var villa = await _villaRepo.Obtener(v => v.Id == id);
             if (villa == null)
             {
                 return NotFound();
             }
 
-            _db.Villas.Remove(villa); //DELETE from villas where Id == Id;
-            await _db.SaveChangesAsync(); //Guardar
+            _villaRepo.Remover(villa); //DELETE from villas where Id == Id;
 
             return NoContent();
         }
@@ -134,8 +134,7 @@ namespace API_PROYECT.Controllers
 
             Villa modelo = _mapper.Map<Villa>(updateDto);
 
-            _db.Villas.Update(modelo); //Actualizar el modelo seleccionado
-            await _db.SaveChangesAsync(); //guardar
+            _villaRepo.Actualizar(modelo); //Actualizar el modelo seleccionado
 
             return NoContent();
         }
@@ -153,7 +152,7 @@ namespace API_PROYECT.Controllers
             //Sacar el registro que se va a modificar
             //AsNoTracking -> consultar un registro de entityframework sin que se trackee
             //Utilizarlo cuando se trabaja con un registro que se instancia 2 veces
-            var villa = await _db.Villas.AsNoTracking().FirstOrDefaultAsync(v => v.Id == id);
+            var villa = await _villaRepo.Obtener(v => v.Id == id, tracked:false);
 
             VillaUpdateDto villaDto = _mapper.Map<VillaUpdateDto>(villa);
 
@@ -168,8 +167,7 @@ namespace API_PROYECT.Controllers
 
             Villa modelo = _mapper.Map<Villa>(villaDto);
 
-            _db.Villas.Update(modelo);
-            await _db.SaveChangesAsync();
+            _villaRepo.Actualizar(modelo);
 
             return NoContent();
         }
