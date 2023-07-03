@@ -1,9 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "VaJT2LZDSJtY1JMLr1B/y/4bw2yZP3pswevEAe9bCSjt2bOB0slNTAwsMsAU3p9KJ7al/ID/P1VSek5OkGfFZA==",
+  "dgSpecHash": "s0Rf249ouUI/uC6Q+QVBTSpeg2F9Vq2WaYLH0I4Wx0gAXwaTrC1UL/EHygrkY054nRyQiUb/ld4k3qimsRIB3w==",
   "success": true,
   "projectFilePath": "C:\\Users\\klenb\\source\\repos\\API_PROYECT\\API_PROYECT\\API_PROYECT.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\klenb\\.nuget\\packages\\automapper\\12.0.1\\automapper.12.0.1.nupkg.sha512",
+    "C:\\Users\\klenb\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\12.0.1\\automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",
     "C:\\Users\\klenb\\.nuget\\packages\\azure.core\\1.24.0\\azure.core.1.24.0.nupkg.sha512",
     "C:\\Users\\klenb\\.nuget\\packages\\azure.identity\\1.6.0\\azure.identity.1.6.0.nupkg.sha512",
     "C:\\Users\\klenb\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",

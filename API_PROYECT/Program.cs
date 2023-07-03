@@ -1,3 +1,4 @@
+using API_PROYECT;
 using API_PROYECT.Datos;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +15,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
 {
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+builder.Services.AddAutoMapper(typeof(MappingConfig)); // Hacer uso de automapper
 
 var app = builder.Build();
 
