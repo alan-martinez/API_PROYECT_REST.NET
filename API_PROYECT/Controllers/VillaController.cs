@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 namespace API_PROYECT.Controllers
 {
@@ -18,24 +19,39 @@ namespace API_PROYECT.Controllers
         //private readonly ApplicationDbContext _db;
         private readonly IVillaRepositorio _villaRepo;
         private readonly IMapper _mapper;
+        protected APIResponse _response;
         public VillaController(ILogger<VillaController> logger, IVillaRepositorio villaRepo, IMapper mapper)
         {
             _logger = logger;
             _villaRepo = villaRepo;
             _mapper = mapper;
+            _response = new();
         }
 
         //endpoint retorna todas las villas
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)] //Documentar diferentes codigos de estado
         //ActionResult -> para trabajar con codigos de estado
-        public async Task<ActionResult<IEnumerable<VillaDto>>> GetVillas()
+        public async Task<ActionResult<APIResponse>> GetVillas()
         {
-            _logger.LogInformation("Obtener las villas");
-            
-            IEnumerable<Villa> villaList = await _villaRepo.ObtenerTodos();
+            try
+            {
+                _logger.LogInformation("Obtener las villas");
 
-            return Ok(_mapper.Map<IEnumerable<VillaDto>>(villaList));
+                IEnumerable<Villa> villaList = await _villaRepo.ObtenerTodos();
+
+                _response.Resultado = _mapper.Map<IEnumerable<VillaDto>>(villaList);
+                _response.statusCode = HttpStatusCode.OK;
+
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.isExitoso = false;
+                _response.ErrorMessages = new List<string>() {  ex.ToString() };
+            }
+
+            return _response;
         }
 
         //Endpoint que retorne una sola villa
@@ -43,55 +59,84 @@ namespace API_PROYECT.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)] //Documentar diferentes codigos de estado
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<VillaDto>> GetVilla(int id)
+        public async Task<ActionResult<APIResponse>> GetVilla(int id)
         {
-            if (id == 0)
+            try
             {
-                _logger.LogError("Error al traer Villas con Id: " + id);
-                return BadRequest();
+                if (id == 0)
+                {
+                    _logger.LogError("Error al traer Villas con Id: " + id);
+                    _response.statusCode = HttpStatusCode.BadRequest;
+                    _response.isExitoso = false;
+                    return BadRequest(_response);
+                }
+
+                //var villa = VillaStore.villaList.FirstOrDefault(v => v.Id == id);
+                var villa = await _villaRepo.Obtener(v => v.Id == id); //Traer un registro en base al id de la tabla Villas
+
+                if (villa == null)
+                {
+                    _response.statusCode = HttpStatusCode.NotFound;
+                    _response.isExitoso = false;
+                    return NotFound(_response);
+                }
+
+                _response.Resultado = _mapper.Map<VillaDto>(villa);
+                _response.statusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.isExitoso = false;
+                _response.ErrorMessages = new List<string>() { ex.ToString() }; 
             }
 
-            //var villa = VillaStore.villaList.FirstOrDefault(v => v.Id == id);
-            var villa = await _villaRepo.Obtener(v => v.Id == id); //Traer un registro en base al id de la tabla Villas
-
-            if (villa == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(_mapper.Map<VillaDto>(villa));
+            return _response;
         }
 
         [HttpPost] //Endpoint para crear nueva villa
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<VillaDto>> CrearVilla([FromBody] VillaCreateDto createDto)
+        public async Task<ActionResult<APIResponse>> CrearVilla([FromBody] VillaCreateDto createDto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                //Validacion personalizada
+                if (await _villaRepo.Obtener(v => v.Nombre.ToLower() == createDto.Nombre.ToLower()) != null)
+                {
+                    ModelState.AddModelError("NombreExiste", "La villa con ese nombre ya existe!");
+                    return BadRequest(ModelState);
+                }
+
+                if (createDto == null)
+                {
+                    return BadRequest(createDto);
+                }
+
+                Villa modelo = _mapper.Map<Villa>(createDto);
+
+
+                //Agregar registro a la BD
+                await _villaRepo.Crear(modelo); //Insert
+                _response.Resultado = modelo;
+                _response.statusCode = HttpStatusCode.Created;
+
+                return CreatedAtRoute("GetVilla", new { id = modelo.Id }, _response); //Redirigir a una ruta
+            }
+            catch (Exception ex)
+            {
+                _response.isExitoso = false;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
             }
 
-            //Validacion personalizada
-            if ( await _villaRepo.Obtener(v => v.Nombre.ToLower() == createDto.Nombre.ToLower()) != null)
-            {
-                ModelState.AddModelError("NombreExiste", "La villa con ese nombre ya existe!");
-                return BadRequest(ModelState);
-            }
-
-            if (createDto == null)
-            {
-                return BadRequest(createDto);
-            }
-
-            Villa modelo = _mapper.Map<Villa>(createDto);
-
-
-            //Agregar registro a la BD
-            await _villaRepo.Crear(modelo); //Insert
-
-            return CreatedAtRoute("GetVilla", new { id = modelo.Id }, modelo); //Redirigir a una ruta
+            return _response;
+            
         }
 
         //Endpoint para borrar villa
@@ -101,19 +146,34 @@ namespace API_PROYECT.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteVilla(int id)
         {
-            if (id == 0)
+            try
             {
-                return BadRequest();
+                if (id == 0)
+                {
+                    _response.isExitoso = false;
+                    _response.statusCode = HttpStatusCode.BadRequest;
+                    return BadRequest(_response);
+                }
+                var villa = await _villaRepo.Obtener(v => v.Id == id);
+                if (villa == null)
+                {
+                    _response.isExitoso = false;
+                    _response.statusCode = HttpStatusCode.NotFound;
+                    return NotFound(_response);
+                }
+
+                await _villaRepo.Remover(villa); //DELETE from villas where Id == Id;
+
+                _response.statusCode = HttpStatusCode.NoContent;
+                return Ok(_response);
             }
-            var villa = await _villaRepo.Obtener(v => v.Id == id);
-            if (villa == null)
+            catch (Exception ex)
             {
-                return NotFound();
+                _response.isExitoso = false;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
             }
 
-            _villaRepo.Remover(villa); //DELETE from villas where Id == Id;
-
-            return NoContent();
+            return BadRequest(_response);
         }
 
         //Endpoint para actualizar registro
@@ -124,7 +184,9 @@ namespace API_PROYECT.Controllers
         {
             if (updateDto == null || id != updateDto.Id)
             {
-                return BadRequest();
+                _response.isExitoso = false;
+                _response.statusCode = HttpStatusCode.BadRequest;
+                return BadRequest(_response);
             }
             //Buscar el registro por el ID
             //var villa = VillaStore.villaList.FirstOrDefault(v => v.Id == id);
@@ -134,9 +196,10 @@ namespace API_PROYECT.Controllers
 
             Villa modelo = _mapper.Map<Villa>(updateDto);
 
-            _villaRepo.Actualizar(modelo); //Actualizar el modelo seleccionado
+            await _villaRepo.Actualizar(modelo); //Actualizar el modelo seleccionado
+            _response.statusCode = HttpStatusCode.NoContent;
 
-            return NoContent();
+            return Ok(_response);
         }
 
         //Endpoint para actualizar 1 sola propiedad
@@ -167,9 +230,10 @@ namespace API_PROYECT.Controllers
 
             Villa modelo = _mapper.Map<Villa>(villaDto);
 
-            _villaRepo.Actualizar(modelo);
+            await _villaRepo.Actualizar(modelo);
+            _response.statusCode = HttpStatusCode.NoContent;
 
-            return NoContent();
+            return Ok(_response);
         }
     }
 }
