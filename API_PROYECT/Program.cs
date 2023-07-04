@@ -23,6 +23,9 @@ builder.Services.AddAutoMapper(typeof(MappingConfig)); // Hacer uso de automappe
 //Inferfaz de villa repositorio
 builder.Services.AddScoped<IVillaRepositorio, VillaRepositorio>();
 
+//Inferfaz de NumeroVilla repositorio
+builder.Services.AddScoped<INumeroVillaRepositorio, NumeroVillaRepositorio>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

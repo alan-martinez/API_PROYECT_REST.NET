@@ -13,6 +13,11 @@ namespace API_PROYECT
 
             CreateMap<Villa, VillaCreateDto>().ReverseMap(); //Fuente: Ambas, Destino: Ambas 
             CreateMap<Villa, VillaUpdateDto>().ReverseMap();
+
+            CreateMap<NumeroVilla, NumeroVillaDto>().ReverseMap(); //Fuente: Ambas, Destino: Ambas 
+            CreateMap<NumeroVilla, NumeroVillaCreateDto>().ReverseMap(); //Fuente: Ambas, Destino: Ambas 
+            CreateMap<NumeroVilla, NumeroVillaUpdateDto>().ReverseMap(); //Fuente: Ambas, Destino: Ambas 
+
         }
     }
 }
